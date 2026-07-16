@@ -1,0 +1,5 @@
+linear-scout
+bin/
+dist/
+*.local.*
+.env
