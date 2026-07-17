@@ -6,9 +6,11 @@ opportunities. It is **read-only by default** — it never writes to your Linear
 workspace unless a future, explicitly-opted-in write command is run.
 
 This repository implements **Milestone 1** (read-only reports + draft
-recommendations) and **Milestone 2** (explicit, previewed Linear write
-commands). Reads never mutate Linear; writes only happen behind an explicit
-`--execute` flag with a dry-run preview, a confirmation prompt, and an audit log.
+recommendations), **Milestone 2** (explicit, previewed Linear write commands),
+and **Milestone 3** (learning: inferring label→app mappings from activity, plus
+a correction/feedback loop). Reads never mutate Linear; writes only happen
+behind an explicit `--execute` flag with a dry-run preview, a confirmation
+prompt, and an audit log.
 
 ## Install
 
@@ -75,6 +77,28 @@ Requires Go 1.22+.
    Add `--yes` to skip the confirmation prompt in automation. Every executed
    write is appended to `audit.log` in the profile directory.
 
+7. **Teach it your workspace** (Milestone 3 — improves grouping over time):
+
+   ```bash
+   # Infer label→app mappings from recent activity (dry-run):
+   linear-scout learn run --since 30d
+
+   # Apply the accepted mappings to your local profile:
+   linear-scout learn run --since 30d --apply
+
+   # Record a manual correction, or feedback on a recommendation:
+   linear-scout correct --label frontend --app "Web App"
+   linear-scout feedback --rec "Add upload retry" --reject
+
+   # See what's been learned:
+   linear-scout learn inspect
+   ```
+
+   Learned mappings are stored as plain JSON in the profile directory and are
+   fed back into grouping on the next `report`/`learn` run, so classification of
+   messy projects improves as you use the tool. Everything learned is
+   inspectable and reversible via `profile inspect|export|delete`.
+
 ## Commands
 
 | Command | Purpose |
@@ -87,6 +111,10 @@ Requires Go 1.22+.
 | `create-issues` | Create Linear issues from drafts. Dry-run unless `--execute`. |
 | `comment` | Add a comment to an issue. Dry-run unless `--execute`. |
 | `label` | Add labels to an issue. Dry-run unless `--execute`. |
+| `learn run` | Infer label→app mappings from activity. Dry-run unless `--apply`. |
+| `learn inspect` | Show learned mappings + accept/reject decision counts. |
+| `correct` | Record a label→app correction into the profile. |
+| `feedback` | Record acceptance/rejection of a recommendation. |
 | `profile inspect\|export\|delete` | Inspect, export, or delete local learned profile state. |
 
 ## Configuration model
