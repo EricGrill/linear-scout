@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 
 	"github.com/EricGrill/linear-scout/internal/model"
 	openai "github.com/sashabaranov/go-openai"
@@ -18,6 +19,11 @@ type OpenAIOption func(*openai.ClientConfig)
 
 func WithBaseURL(url string) OpenAIOption {
 	return func(c *openai.ClientConfig) { c.BaseURL = url }
+}
+
+// WithHTTPClient overrides the HTTP client (e.g. to add retry/backoff).
+func WithHTTPClient(hc *http.Client) OpenAIOption {
+	return func(c *openai.ClientConfig) { c.HTTPClient = hc }
 }
 
 func NewOpenAI(apiKey, modelName string, opts ...OpenAIOption) *OpenAIProvider {

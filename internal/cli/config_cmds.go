@@ -12,12 +12,14 @@ import (
 
 	"github.com/EricGrill/linear-scout/internal/ai"
 	"github.com/EricGrill/linear-scout/internal/config"
+	"github.com/EricGrill/linear-scout/internal/httpx"
 	"github.com/EricGrill/linear-scout/internal/linear"
 )
 
 func realDeps(prof config.Profile) *deps {
-	src := linear.New(linear.DefaultEndpoint, prof.LinearToken, http.DefaultClient)
-	prov := ai.NewOpenAI(prof.OpenAIKey, "gpt-4o-mini")
+	retryClient := httpx.Client(http.DefaultClient)
+	src := linear.New(linear.DefaultEndpoint, prof.LinearToken, retryClient)
+	prov := ai.NewOpenAI(prof.OpenAIKey, "gpt-4o-mini", ai.WithHTTPClient(retryClient))
 	return &deps{source: src, provider: prov}
 }
 
@@ -63,7 +65,7 @@ func newValidateCmd() *cobra.Command {
 			if prof.LinearToken == "" {
 				return fmt.Errorf("linear_token is empty in %s", dir)
 			}
-			c := linear.New(linear.DefaultEndpoint, prof.LinearToken, http.DefaultClient)
+			c := linear.New(linear.DefaultEndpoint, prof.LinearToken, httpx.Client(http.DefaultClient))
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
 			if _, err := c.Issues(ctx, time.Now().Add(-time.Hour)); err != nil {
