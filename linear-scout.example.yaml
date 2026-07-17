@@ -1,0 +1,5 @@
+group_by: project
+formats: [markdown, json, telegram]
+rubric:
+  min_confidence: 0.5
+  require_evidence: true
