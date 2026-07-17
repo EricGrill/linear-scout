@@ -14,13 +14,15 @@ import (
 	"github.com/EricGrill/linear-scout/internal/config"
 	"github.com/EricGrill/linear-scout/internal/httpx"
 	"github.com/EricGrill/linear-scout/internal/linear"
+	"github.com/EricGrill/linear-scout/internal/store"
 )
 
 func realDeps(prof config.Profile) *deps {
 	retryClient := httpx.Client(http.DefaultClient)
-	src := linear.New(linear.DefaultEndpoint, prof.LinearToken, retryClient)
+	c := linear.New(linear.DefaultEndpoint, prof.LinearToken, retryClient)
 	prov := ai.NewOpenAI(prof.OpenAIKey, "gpt-4o-mini", ai.WithHTTPClient(retryClient))
-	return &deps{source: src, provider: prov}
+	// The same client serves reads and writes; store the profile dir for audit.
+	return &deps{source: c, provider: prov, writer: c, audit: store.New(prof.Dir)}
 }
 
 func newInitCmd() *cobra.Command {

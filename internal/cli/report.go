@@ -93,13 +93,3 @@ func newCreateDraftsCmd() *cobra.Command {
 	return cmd
 }
 
-func newPreviewCmd() *cobra.Command {
-	return &cobra.Command{
-		Use:   "preview",
-		Short: "Preview Linear writes (dry-run). Writes are implemented in Milestone 2.",
-		RunE: func(cmd *cobra.Command, _ []string) error {
-			fmt.Fprintln(cmd.OutOrStdout(), "[dry-run] No write actions available yet (Milestone 2). Nothing will change in Linear.")
-			return nil
-		},
-	}
-}
