@@ -26,11 +26,14 @@ func Classify(act model.Activity, mappings map[string]string, groupBy string) ([
 			continue
 		}
 		var metaKey string
+		var names map[string]string
 		switch groupBy {
 		case "team":
 			metaKey = is.TeamID
+			names = act.Teams
 		default:
 			metaKey = is.ProjectID
+			names = act.Projects
 		}
 		if metaKey == "" {
 			g := ensure("unclassified", "Unclassified", "unclassified", 0.3)
@@ -38,7 +41,11 @@ func Classify(act model.Activity, mappings map[string]string, groupBy string) ([
 			unclassified++
 			continue
 		}
-		g := ensure(groupBy+":"+metaKey, metaKey, groupBy, 0.6)
+		label := metaKey
+		if name, ok := names[metaKey]; ok && name != "" {
+			label = name
+		}
+		g := ensure(groupBy+":"+metaKey, label, groupBy, 0.6)
 		g.IssueIDs = append(g.IssueIDs, is.ID)
 	}
 

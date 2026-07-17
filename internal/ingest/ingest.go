@@ -15,6 +15,13 @@ type Source interface {
 	Comments(ctx context.Context, since time.Time) ([]model.Comment, error)
 }
 
+// NameSource is an optional capability: sources that can resolve project/team
+// IDs to human names. Name resolution is best-effort and cosmetic.
+type NameSource interface {
+	ProjectNames(ctx context.Context) (map[string]string, error)
+	TeamNames(ctx context.Context) (map[string]string, error)
+}
+
 // ParseWindow accepts forms like "7d", "24h", "2w".
 func ParseWindow(s string, now time.Time) (time.Time, error) {
 	if len(s) < 2 {
@@ -51,8 +58,19 @@ func Fetch(ctx context.Context, src Source, window string, now time.Time) (model
 	if err != nil {
 		return model.Activity{}, fmt.Errorf("fetch comments: %w", err)
 	}
+	projects := map[string]string{}
+	teams := map[string]string{}
+	// Best-effort name resolution: cosmetic, so failures degrade to IDs.
+	if ns, ok := src.(NameSource); ok {
+		if pn, err := ns.ProjectNames(ctx); err == nil {
+			projects = pn
+		}
+		if tn, err := ns.TeamNames(ctx); err == nil {
+			teams = tn
+		}
+	}
 	return model.Activity{
 		Since: since, Until: now, Issues: issues, Comments: comments,
-		Projects: map[string]string{}, Teams: map[string]string{},
+		Projects: projects, Teams: teams,
 	}, nil
 }
