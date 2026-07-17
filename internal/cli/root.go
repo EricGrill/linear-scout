@@ -8,17 +8,19 @@ import (
 
 	"github.com/EricGrill/linear-scout/internal/ai"
 	"github.com/EricGrill/linear-scout/internal/ingest"
+	"github.com/EricGrill/linear-scout/internal/store"
 	"github.com/EricGrill/linear-scout/internal/write"
 )
 
-// deps lets tests inject a deterministic source/provider/clock/writer.
+// deps lets tests inject a deterministic source/provider/clock/writer/store.
 type deps struct {
-	source   ingest.Source
-	provider ai.Provider
-	now      time.Time
-	mappings map[string]string
-	writer   write.Writer
-	audit    write.AuditSink
+	source       ingest.Source
+	provider     ai.Provider
+	now          time.Time
+	mappings     map[string]string
+	writer       write.Writer
+	audit        write.AuditSink
+	profileStore *store.Store
 }
 
 // testDeps, when non-nil, overrides real construction (tests only).
@@ -44,6 +46,9 @@ func NewRootCmd() *cobra.Command {
 	root.AddCommand(newCreateIssuesCmd())
 	root.AddCommand(newCommentCmd())
 	root.AddCommand(newLabelCmd())
+	root.AddCommand(newLearnCmd())
+	root.AddCommand(newCorrectCmd())
+	root.AddCommand(newFeedbackCmd())
 	root.AddCommand(newProfileCmd())
 	return root
 }
