@@ -5,10 +5,10 @@ activity and turns noisy project motion into evidence-backed product improvement
 opportunities. It is **read-only by default** — it never writes to your Linear
 workspace unless a future, explicitly-opted-in write command is run.
 
-This repository currently implements **Milestone 1**: a CLI that reads recent
-Linear activity, generates AI recommendations with source evidence links, and
-emits Markdown / JSON / Telegram-friendly reports plus reviewable draft issue
-metadata.
+This repository implements **Milestone 1** (read-only reports + draft
+recommendations) and **Milestone 2** (explicit, previewed Linear write
+commands). Reads never mutate Linear; writes only happen behind an explicit
+`--execute` flag with a dry-run preview, a confirmation prompt, and an audit log.
 
 ## Install
 
@@ -58,6 +58,23 @@ Requires Go 1.22+.
    linear-scout create-drafts --since 7d
    ```
 
+6. **Act on recommendations** (Milestone 2 — dry-run by default):
+
+   ```bash
+   # Preview the issues that would be created (never writes):
+   linear-scout preview --since 7d --team <TEAM_ID>
+
+   # Create them for real (prompts for confirmation):
+   linear-scout create-issues --since 7d --team <TEAM_ID> --execute
+
+   # Add a comment or labels to an existing issue:
+   linear-scout comment --issue ENG-123 --body "Flagged by linear-scout" --execute
+   linear-scout label --issue ENG-123 --labels "needs-triage,product" --execute
+   ```
+
+   Add `--yes` to skip the confirmation prompt in automation. Every executed
+   write is appended to `audit.log` in the profile directory.
+
 ## Commands
 
 | Command | Purpose |
@@ -66,7 +83,10 @@ Requires Go 1.22+.
 | `validate` | Check Linear and OpenAI credentials. |
 | `report` | Generate an AI recommendation report (`--since`, `--group-by`, `--format`, `--limit`). |
 | `create-drafts` | Produce reviewable draft issue metadata (no writes). |
-| `preview` | Dry-run preview of Linear writes (write actions land in Milestone 2). |
+| `preview` | Dry-run of the issues `create-issues` would create (never writes). |
+| `create-issues` | Create Linear issues from drafts. Dry-run unless `--execute`. |
+| `comment` | Add a comment to an issue. Dry-run unless `--execute`. |
+| `label` | Add labels to an issue. Dry-run unless `--execute`. |
 | `profile inspect\|export\|delete` | Inspect, export, or delete local learned profile state. |
 
 ## Configuration model
@@ -83,10 +103,15 @@ See `linear-scout.example.yaml` for the shared config format.
 
 ## Safety
 
-`linear-scout` is read-only by default. It reads Linear activity and produces
-reports and draft metadata; it does not create, modify, close, reprioritize, or
-delete anything in Linear. Explicit, previewed write commands are planned for
-Milestone 2.
+`linear-scout` is read-only by default. `report`, `create-drafts`, and
+`preview` never mutate Linear. The write commands (`create-issues`, `comment`,
+`label`) are dry-run unless `--execute` is passed, and even then print a change
+summary, require confirmation (unless `--yes`), and record every change to an
+append-only `audit.log`.
+
+By design the tool can only create issues, add comments, and add labels. It
+**cannot** close, reprioritize, or delete issues/comments, or broadly mutate
+existing content — those operations are not implemented.
 
 ## Data sharing
 

@@ -28,9 +28,19 @@ authorization header to Linear and to your AI provider.
 
 ## Linear permissions
 
-The tool needs a **Linear Personal API key** with **read** access. Create one at
-**Linear → Settings → API → Personal API keys**. Milestone 1 issues only read
-queries; it performs no mutations, so a read-scoped key is sufficient.
+The tool needs a **Linear Personal API key**, created at **Linear → Settings →
+API → Personal API keys**.
+
+- For read-only use (`report`, `create-drafts`, `preview`), a **read**-scoped
+  key is sufficient — these commands perform no mutations.
+- For the Milestone 2 write commands (`create-issues`, `comment`, `label` with
+  `--execute`), the key must also have **write** access. Even with a write-scoped
+  key, the tool only ever creates issues, adds comments, and adds labels; it
+  never closes, reprioritizes, or deletes anything.
+
+Writes never happen implicitly: a command mutates Linear only when you pass
+`--execute`, and every change is recorded in `audit.log` in the profile
+directory.
 
 ## AI provider considerations
 
