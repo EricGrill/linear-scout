@@ -5,5 +5,6 @@ go 1.22
 require (
 	github.com/machinebox/graphql v0.2.2 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
+	github.com/sashabaranov/go-openai v1.41.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
