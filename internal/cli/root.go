@@ -15,6 +15,7 @@ type deps struct {
 	source   ingest.Source
 	provider ai.Provider
 	now      time.Time
+	mappings map[string]string
 }
 
 // testDeps, when non-nil, overrides real construction (tests only).

@@ -14,7 +14,7 @@ import (
 type stubSrc struct{}
 
 func (stubSrc) Issues(context.Context, time.Time) ([]model.Issue, error) {
-	return []model.Issue{{ID: "i1", Identifier: "ENG-1", URL: "https://l/ENG-1", ProjectID: "p1", Title: "Crash"}}, nil
+	return []model.Issue{{ID: "i1", Identifier: "ENG-1", URL: "https://l/ENG-1", ProjectID: "p1", Title: "Crash", Labels: []string{"bug"}}}, nil
 }
 func (stubSrc) Comments(context.Context, time.Time) ([]model.Comment, error) { return nil, nil }
 
@@ -40,4 +40,27 @@ func TestReportCommandRendersMarkdown(t *testing.T) {
 		t.Fatalf("report output missing rec:\n%s", out.String())
 	}
 	_ = ingest.Source(stubSrc{}) // ensure interface satisfied
+}
+
+// TestReportUsesLearnedMappings proves a learned label→app mapping flows through
+// the CLI seam into grouping (observable via the JSON report's Groups).
+func TestReportUsesLearnedMappings(t *testing.T) {
+	root := NewRootCmd()
+	testDeps = &deps{
+		source:   stubSrc{},
+		provider: ai.StubProvider{Recs: nil},
+		now:      time.Date(2026, 7, 16, 0, 0, 0, 0, time.UTC),
+		mappings: map[string]string{"label:bug": "CoreApp"},
+	}
+	defer func() { testDeps = nil }()
+
+	var out bytes.Buffer
+	root.SetOut(&out)
+	root.SetArgs([]string{"report", "--format", "json"})
+	if err := root.Execute(); err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Contains(out.Bytes(), []byte("CoreApp")) {
+		t.Fatalf("learned mapping did not affect grouping:\n%s", out.String())
+	}
 }

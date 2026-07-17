@@ -10,6 +10,7 @@ import (
 	"github.com/EricGrill/linear-scout/internal/drafts"
 	"github.com/EricGrill/linear-scout/internal/engine"
 	"github.com/EricGrill/linear-scout/internal/report"
+	"github.com/EricGrill/linear-scout/internal/store"
 )
 
 func buildDeps(cmd *cobra.Command) (*deps, config.RubricConfig, error) {
@@ -25,7 +26,12 @@ func buildDeps(cmd *cobra.Command) (*deps, config.RubricConfig, error) {
 	if err != nil {
 		return nil, config.RubricConfig{}, fmt.Errorf("load profile (run `linear-scout init`): %w", err)
 	}
-	return realDeps(prof), config.RubricConfig{MinConfidence: 0.5, RequireEvidence: true}, nil
+	d := realDeps(prof)
+	// Load learned label→app mappings so grouping benefits from prior corrections.
+	if lp, err := store.New(dir).LoadLearned(); err == nil {
+		d.mappings = lp.AppMappings
+	}
+	return d, config.RubricConfig{MinConfidence: 0.5, RequireEvidence: true}, nil
 }
 
 func newReportCmd() *cobra.Command {
@@ -40,7 +46,7 @@ func newReportCmd() *cobra.Command {
 				return err
 			}
 			rep, err := engine.Run(context.Background(), d.source, d.provider, engine.Options{
-				Window: since, GroupBy: groupBy, Limit: limit, Now: nowFn(d), Rubric: rubric,
+				Window: since, GroupBy: groupBy, Limit: limit, Now: nowFn(d), Rubric: rubric, Mappings: d.mappings,
 			})
 			if err != nil {
 				return err
@@ -71,7 +77,7 @@ func newCreateDraftsCmd() *cobra.Command {
 				return err
 			}
 			rep, err := engine.Run(context.Background(), d.source, d.provider, engine.Options{
-				Window: since, GroupBy: groupBy, Now: nowFn(d), Rubric: rubric,
+				Window: since, GroupBy: groupBy, Now: nowFn(d), Rubric: rubric, Mappings: d.mappings,
 			})
 			if err != nil {
 				return err
