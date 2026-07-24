@@ -1,4 +1,5 @@
-linear-scout
+/linear-scout
+/linear-scout.exe
 bin/
 dist/
 *.local.*
