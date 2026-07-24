@@ -28,8 +28,9 @@ func TestProfileDirRespectsXDG(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got != "/tmp/xdgtest/linear-scout" {
-		t.Fatalf("ProfileDir=%q", got)
+	want := filepath.Join("/tmp/xdgtest", "linear-scout")
+if got != want {
+    t.Fatalf("ProfileDir=%q, want %q", got, want)
 	}
 }
 
